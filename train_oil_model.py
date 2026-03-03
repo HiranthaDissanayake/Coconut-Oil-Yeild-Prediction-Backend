@@ -1,14 +1,3 @@
-"""
-╔══════════════════════════════════════════════════════════════════╗
-║  COMPLETE TRAINING PIPELINE  –  7-Day Dryness + Oil Prediction  ║
-║  Step 1: CNN classifies day (1-7) → gives dryness score         ║
-║  Step 2: Regression uses weight + dryness score → mL of oil     ║
-╚══════════════════════════════════════════════════════════════════╝
-
-Run AFTER  train_cnn_7day.py  is complete.
-Run this:  python train_oil_model.py
-"""
-
 import os, json, joblib
 import numpy as np
 import pandas as pd

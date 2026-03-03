@@ -1,20 +1,3 @@
-"""
-╔══════════════════════════════════════════════════════════════════╗
-║  BATCH DATA MANAGER - Switch Between Sample & Real Data         ║
-║  Batch Data Manager - Sample සහ Real Data අතර Switch කරන්න    ║
-╚══════════════════════════════════════════════════════════════════╝
-
-This script helps you:
-1. Train with sample/temporary data for testing
-2. Switch to real data when ready
-3. Retrain the oil model easily
-
-මෙම script උදව් කරයි:
-1. Testing සඳහා sample/temporary data train කිරීමට
-2. Ready වූ විට real data ලදී switch කිරීමට
-3. Oil model easily retrain කිරීමට
-"""
-
 import os
 import shutil
 import pandas as pd

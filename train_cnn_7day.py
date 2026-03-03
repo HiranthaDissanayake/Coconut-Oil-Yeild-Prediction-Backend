@@ -1,39 +1,4 @@
-"""
-╔══════════════════════════════════════════════════════════════════╗
-║  COCONUT DRYNESS CNN  –  7-Day Progressive Training              ║
-║  Day 1 (fresh) → Day 7 (fully dried) = 7 classes                ║
-║  200 images × 7 days = 1,400 images total                       ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Advanced techniques used:                                        ║
-║  1. EfficientNetV2S  – best at detecting subtle visual changes   ║
-║  2. LAB color space  – separates color from brightness exactly   ║
-║  3. GLCM texture     – measures surface roughness / smoothness   ║
-║  4. Ordinal regression – respects day 1 < 2 < 3 … < 7 order     ║
-║  5. Label smoothing  – handles images that look similar          ║
-║  6. Progressive unfreeze – fine-tunes carefully layer by layer   ║
-╚══════════════════════════════════════════════════════════════════╝
-
-Dataset folder structure needed / අවශ්‍ය folder structure:
-  dataset/
-    train/
-      day_1/   (200 images – fresh coconut / fresh coconut images)
-      day_2/   (200 images)
-      day_3/   (200 images)
-      day_4/   (200 images)
-      day_5/   (200 images)
-      day_6/   (200 images)
-      day_7/   (200 images – most dry / වඩාත්ම dried images)
-    val/
-      day_1/   (validation images)
-      day_2/   (validation images)
-      ...
-      day_7/   (validation images)
-
-Run: python train_cnn_7day.py
-"""
-
-import os, json, warnings
-import numpy as np
+import os, json, warningsimport numpy as np
 import pandas as pd
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt

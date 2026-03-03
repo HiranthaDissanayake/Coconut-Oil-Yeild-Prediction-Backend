@@ -1,11 +1,3 @@
-"""
-╔══════════════════════════════════════════════════════════════════╗
-║  FLASK API with COPRA IMAGE VALIDATION                          ║
-║  Validates images are actually copra before prediction          ║
-║  Copra images ද නොද validate කරයි prediction පෙර               ║
-╚══════════════════════════════════════════════════════════════════╝
-"""
-
 import os, json, base64, logging
 import numpy as np
 import joblib

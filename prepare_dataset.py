@@ -1,20 +1,3 @@
-"""
-╔═══════════════════════════════════════════════════════════╗
-║  DATASET PREPARATION  –  7-Day Structure                  ║
-║  Organises raw images into day_1 … day_7 folders          ║
-╚═══════════════════════════════════════════════════════════╝
-
-Your raw images should be in:
-  raw_images/
-    day_1/   ← 200 images from Day 1 (fresh)
-    day_2/   ← 200 images
-    ...
-    day_7/   ← 200 images (most dried)
-
-Run: python prepare_dataset.py
-Output: dataset/day_1/ … dataset/day_7/
-"""
-
 import os, shutil, random
 from pathlib import Path
 
