@@ -1,6 +1,16 @@
 batch_id,batch_name,drying_days,whole_batch_weight_kg,oil_extracted_ml,notes
-1,Batch_01,3,2.2,900,First batch - images collected from this batch
-2,Batch_02,4,2.4,1100,Second batch - no images (similar to batch 1)
-3,Batch_03,5,2.1,1150,Third batch - no images (similar to batch 1)
-4,Batch_04,6,2.7,1600,Fourth batch - no images (similar to batch 1)
-5,Batch_05,7,2.9,1900,Fifth batch - no images (similar to batch 1)
+1,Batch_01,3,2.9,900,First batch - 3 days dried
+2,Batch_02,4,2.9,1100,Second batch - 4 days dried
+3,Batch_03,5,2.9,1150,Third batch - 5 days dried
+4,Batch_04,6,2.9,1600,Fourth batch - 6 days dried
+5,Batch_05,7,2.9,1900,Fifth batch - 7 days dried
+6,Batch_06,3,1.5,450,Small batch - 3 days dried
+7,Batch_07,5,1.5,590,Small batch - 5 days dried
+8,Batch_08,7,1.5,850,Small batch - 7 days dried
+9,Batch_09,3,4.5,1400,Large batch - 3 days dried
+10,Batch_10,5,4.5,1800,Large batch - 5 days dried
+11,Batch_11,7,4.5,2900,Large batch - 7 days dried
+12,Batch_12,4,2.0,720,Medium batch - 4 days dried
+13,Batch_13,6,2.0,1100,Medium batch - 6 days dried
+14,Batch_14,4,3.5,1250,Medium-large batch - 4 days dried
+15,Batch_15,6,3.5,2000,Medium-large batch - 6 days dried

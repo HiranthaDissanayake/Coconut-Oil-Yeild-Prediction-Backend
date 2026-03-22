@@ -1,6 +1,5 @@
 {
-  "oil_model_type": "gradient_boosting",
-  "oil_model_r2": 0.999999817142249,
+  "oil_model_type": "formula_based",
   "dryness_scores": {
     "day_1": 0.14285714285714285,
     "day_2": 0.2857142857142857,
@@ -10,12 +9,7 @@
     "day_6": 0.8571428571428571,
     "day_7": 1.0
   },
-  "avg_ml_per_g": 0.5325616592857972,
-  "min_ml_per_g": 0.4090909090909091,
-  "max_ml_per_g": 0.6551724137931034,
-  "num_batches": 5,
-  "features": [
-    "weight_g",
-    "dryness_score"
-  ]
+  "avg_ml_per_kg": 458.62068965517244,
+  "use_formula": true,
+  "num_batches": 5
 }

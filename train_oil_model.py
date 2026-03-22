@@ -12,157 +12,154 @@ warnings.filterwarnings('ignore')
 
 os.makedirs('models', exist_ok=True)
 
-# ── Dryness score mapping (same as CNN config) ─────────────
-# Day number → dryness score (0‥1)
-# Higher score = more dried = more oil expected
 DRYNESS_SCORE = {
-    'day_1': 1/7,   # ≈ 0.143  fresh
-    'day_2': 2/7,
-    'day_3': 3/7,
-    'day_4': 4/7,
-    'day_5': 5/7,
-    'day_6': 6/7,
-    'day_7': 7/7,   # = 1.000  fully dried
+    'day_1': 1/7, 'day_2': 2/7, 'day_3': 3/7, 'day_4': 4/7,
+    'day_5': 5/7, 'day_6': 6/7, 'day_7': 7/7,
 }
 
-print("\n" + "═"*55)
-print("  OIL YIELD REGRESSION MODEL – TRAINING")
-print("  Oil Yield Regression Model – Training")
-print("═"*55)
+print("\n" + "═"*70)
+print("  🔥 IMPROVED OIL YIELD MODEL – TRAINING")
+print("  Fixed: Now respects BOTH weight AND dryness!")
+print("═"*70)
 
 # ══════════════════════════════════════════════════════════
-#  STEP 1: LOAD YOUR REAL BATCH DATA
-#  batch_data.csv ලදී ඔබේ real data load කරයි
+#  STEP 1: LOAD AND VALIDATE DATA
 # ══════════════════════════════════════════════════════════
-print("\n  [1/4] Loading batch data from batch_data.csv...")
+print("\n  [1/5] Loading batch data from batch_data.csv...")
 
 df = pd.read_csv('batch_data.csv')
 print(f"\n  ✅  {len(df)} batches loaded")
-print(df.to_string(index=False))
 
-# Convert weight to grams
-df['weight_g']       = df['whole_batch_weight_kg'] * 1000
-df['oil_per_gram']   = df['oil_extracted_ml'] / df['weight_g']
+# Convert to grams
+df['weight_g'] = df['whole_batch_weight_kg'] * 1000
+df['oil_per_gram'] = df['oil_extracted_ml'] / df['weight_g']
+df['dryness_score'] = df['drying_days'].apply(lambda d: min(d, 7) / 7.0)
 
-# Map drying_days to dryness score
-# All your batches are 7-day dried → dryness_score = 1.0
-df['dryness_score'] = df['drying_days'].apply(
-    lambda d: min(d, 7) / 7.0
-)
-
-print(f"\n  Oil per gram stats:")
-print(f"    Min : {df['oil_per_gram'].min():.4f} mL/g")
-print(f"    Max : {df['oil_per_gram'].max():.4f} mL/g")
-print(f"    Mean: {df['oil_per_gram'].mean():.4f} mL/g  "
-      f"(≈ {df['oil_per_gram'].mean()*1000:.0f} mL per kg)")
+print("\n  Data preview:")
+print(df[['batch_name', 'whole_batch_weight_kg', 'drying_days', 'oil_extracted_ml']].to_string(index=False))
 
 # ══════════════════════════════════════════════════════════
-#  STEP 2: TRAIN REGRESSION MODELS
-#  Weight (g) + Dryness Score → Oil (mL)
+#  🔥 CRITICAL VALIDATION: Check for weight variation
 # ══════════════════════════════════════════════════════════
-print("\n  [2/4] Training regression models...")
+print("\n" + "="*70)
+print("  CRITICAL VALIDATION - Checking data quality...")
+print("="*70)
 
-"""
-English: We train TWO regression models and keep the better one.
+unique_weights = df['whole_batch_weight_kg'].nunique()
+weight_std = df['whole_batch_weight_kg'].std()
 
-  Model A – Linear Regression (simple):
-    oil_mL = a × weight_g + b × dryness_score + c
-    Fast, interpretable, good when data is limited (5 batches).
+print(f"\n  Unique weights in data: {unique_weights}")
+print(f"  Weight std deviation: {weight_std:.2f} kg")
 
-  Model B – Gradient Boosting (smarter):
-    Learns non-linear relationship between weight/dryness and oil.
-    Better when dryness has a non-linear effect on yield.
+if unique_weights < 3:
+    print("  → Use batch_data_IMPROVED.csv instead")
+    print("  → Or collect data with varied weights (1kg, 2kg, 3kg, etc.)")
+    print("\n  Continuing with FORMULA-BASED fallback model...")
+    use_formula = True
+else:
+    print(f"\n  ✅  Good variation! {unique_weights} different weights.")
+    use_formula = False
 
-  We pick whichever has higher R² on the training data.
+# ══════════════════════════════════════════════════════════
+#  STEP 2: TRAIN MODELS
+# ══════════════════════════════════════════════════════════
+print("\n  [2/5] Training regression models...")
 
-Sinhala: Regression models 2ක් train කර හොඳ model keep කරයි.
-
-  Model A – Linear (සරළ):
-    oil_mL = a × weight_g + b × dryness_score + c
-
-  Model B – Gradient Boosting (smart):
-    Weight/dryness සහ oil අතර non-linear relationship ඉගෙනගනී.
-
-  R² ඉහළ model select කරයි.
-"""
-
-# Features: [weight_g,  dryness_score]
 X = df[['weight_g', 'dryness_score']].values
 y = df['oil_extracted_ml'].values
 
 scaler = StandardScaler()
-X_sc   = scaler.fit_transform(X)
+X_sc = scaler.fit_transform(X)
 
-# Model A: Linear Regression
+# Model A: Linear
 lin_model = LinearRegression()
 lin_model.fit(X_sc, y)
-lin_r2  = r2_score(y, lin_model.predict(X_sc))
+lin_r2 = r2_score(y, lin_model.predict(X_sc))
 lin_mae = mean_absolute_error(y, lin_model.predict(X_sc))
 
-# Model B: Gradient Boosting Regressor
+# Model B: Gradient Boosting
 gb_model = GradientBoostingRegressor(
-    n_estimators=200,
-    max_depth=3,
-    learning_rate=0.05,
-    subsample=0.8,
-    random_state=42
+    n_estimators=200, max_depth=3, learning_rate=0.05,
+    subsample=0.8, random_state=42
 )
 gb_model.fit(X_sc, y)
-gb_r2  = r2_score(y, gb_model.predict(X_sc))
+gb_r2 = r2_score(y, gb_model.predict(X_sc))
 gb_mae = mean_absolute_error(y, gb_model.predict(X_sc))
 
-print(f"\n  Model A (Linear Regression):")
-print(f"    R²  = {lin_r2:.4f}   MAE = {lin_mae:.1f} mL")
-print(f"  Model B (Gradient Boosting):")
-print(f"    R²  = {gb_r2:.4f}   MAE = {gb_mae:.1f} mL")
+print(f"\n  Model A (Linear): R²={lin_r2:.4f}  MAE={lin_mae:.1f}mL")
+print(f"  Model B (GradBoost): R²={gb_r2:.4f}  MAE={gb_mae:.1f}mL")
 
-# Pick better model
 if gb_r2 >= lin_r2:
-    best_model      = gb_model
+    best_model = gb_model
     best_model_name = 'gradient_boosting'
-    print(f"\n  ✅  Selected: Gradient Boosting (R²={gb_r2:.4f})")
+    print(f"\n  ✅  Selected: Gradient Boosting")
 else:
-    best_model      = lin_model
+    best_model = lin_model
     best_model_name = 'linear_regression'
-    print(f"\n  ✅  Selected: Linear Regression (R²={lin_r2:.4f})")
+    print(f"\n  ✅  Selected: Linear Regression")
 
 # ══════════════════════════════════════════════════════════
-#  STEP 3: SHOW PREDICTIONS ON YOUR 5 BATCHES
-#  ඔබේ Batches 5 ලදී predictions show කරයි
+#  🔥 STEP 3: VALIDATE WEIGHT DEPENDENCY
 # ══════════════════════════════════════════════════════════
-print("\n  [3/4] Checking predictions on your 5 batches...")
-print(f"\n  {'Batch':<12} {'Weight(kg)':<12} {'Actual(mL)':<14}"
-      f"{'Predicted(mL)':<16} {'Error':<10}")
-print("  " + "-"*62)
+print("\n  [3/5] Validating weight dependency...")
 
-for _, row in df.iterrows():
-    X_t = scaler.transform([[row['weight_g'], row['dryness_score']]])
-    pred = best_model.predict(X_t)[0]
-    err  = pred - row['oil_extracted_ml']
-    print(f"  {row['batch_name']:<12} "
-          f"{row['whole_batch_weight_kg']:<12.1f} "
-          f"{row['oil_extracted_ml']:<14.0f} "
-          f"{pred:<16.0f} "
-          f"{err:+.0f} mL")
+test_weights = [1000, 2000, 3000, 4000]
+test_dryness = 1.0
+
+print(f"\n  Test: Same dryness, different weights")
+print(f"  {'Weight':<10} {'Predicted':<12} {'Should be':<15}")
+print("  " + "-"*40)
+
+predictions = []
+for i, w in enumerate(test_weights):
+    X_test = scaler.transform([[w, test_dryness]])
+    pred = best_model.predict(X_test)[0]
+    predictions.append(pred)
+    
+    if i == 0:
+        base = pred
+        expected = "base"
+    else:
+        ratio = w / test_weights[0]
+        expected = f"{ratio}x base"
+    
+    print(f"  {w}g{'':<5} {pred:<12.1f} {expected:<15}")
+
+# Validate increasing
+increasing = all(predictions[i] < predictions[i+1] 
+                for i in range(len(predictions)-1))
+
+if not increasing:
+    print("\n  ❌ FAILED! Oil doesn't increase with weight!")
+    print("  → Using formula-based model")
+    use_formula = True
+else:
+    print("\n  ✅ PASSED! Oil increases with weight")
 
 # ══════════════════════════════════════════════════════════
-#  STEP 4: SAVE EVERYTHING
+#  STEP 4: SAVE
 # ══════════════════════════════════════════════════════════
-print("\n  [4/4] Saving models & config...")
+print("\n  [4/5] Saving models...")
 
-joblib.dump(best_model, 'models/oil_model.pkl')
-joblib.dump(scaler,     'models/oil_scaler.pkl')
+if use_formula:
+    avg_ml_per_kg = df['oil_per_gram'].mean() * 1000
+    formula_model = {
+        'type': 'formula',
+        'avg_ml_per_kg': float(avg_ml_per_kg),
+    }
+    joblib.dump(formula_model, 'models/oil_model.pkl')
+    best_model_name = 'formula_based'
+else:
+    joblib.dump(best_model, 'models/oil_model.pkl')
 
-# Full config used by flask_api.py
+joblib.dump(scaler, 'models/oil_scaler.pkl')
+
 config = {
-    'oil_model_type':    best_model_name,
-    'oil_model_r2':      float(max(lin_r2, gb_r2)),
-    'dryness_scores':    DRYNESS_SCORE,
-    'avg_ml_per_g':      float(df['oil_per_gram'].mean()),
-    'min_ml_per_g':      float(df['oil_per_gram'].min()),
-    'max_ml_per_g':      float(df['oil_per_gram'].max()),
-    'num_batches':       len(df),
-    'features':          ['weight_g', 'dryness_score'],
+    'oil_model_type': best_model_name,
+    'dryness_scores': DRYNESS_SCORE,
+    'avg_ml_per_kg': float(df['oil_per_gram'].mean() * 1000),
+    'use_formula': use_formula,
+    'num_batches': len(df),
 }
 
 with open('models/oil_config.json', 'w') as f:
@@ -172,20 +169,36 @@ print("  💾  models/oil_model.pkl")
 print("  💾  models/oil_scaler.pkl")
 print("  💾  models/oil_config.json")
 
-# Quick test
-print("\n  Quick test predictions:")
-tests = [
-    (3000, 'day_5', 5/7),
-    (5000, 'day_7', 1.0),
-    (7000, 'day_6', 6/7),
-]
-for w, day, ds in tests:
-    Xt  = scaler.transform([[w, ds]])
-    ml  = best_model.predict(Xt)[0]
-    print(f"    {w}g copra dried {day} → {ml:.0f} mL oil")
+# ══════════════════════════════════════════════════════════
+#  STEP 5: FINAL TEST
+# ══════════════════════════════════════════════════════════
+print("\n  [5/5] Final test - Different weights:")
 
-print("\n" + "═"*55)
-print("  ✅  Oil model training complete!")
-print("  ✅  Oil model training සම්පූර්ණයි!")
+test_cases = [
+    (400, 1.0, "400g day 7"),
+    (800, 1.0, "800g day 7"),
+    (1200, 1.0, "1200g day 7"),
+    (1000, 0.43, "1000g day 3"),
+    (1000, 0.71, "1000g day 5"),
+    (1000, 1.0, "1000g day 7"),
+]
+
+print(f"\n  {'Test':<20} {'Predicted':<12}")
+print("  " + "-"*35)
+
+for w, d, desc in test_cases:
+    if use_formula:
+        pred = (w / 1000) * config['avg_ml_per_kg'] * d
+    else:
+        X_test = scaler.transform([[w, d]])
+        pred = best_model.predict(X_test)[0]
+    print(f"  {desc:<20} {pred:<12.1f}mL")
+
+print("\n" + "="*70)
+print("  ✅  Training complete!")
+if use_formula:
+    print("  Using FORMULA (guarantees correct scaling)")
+else:
+    print("  Using TRAINED MODEL (validated)")
 print("  Next: python flask_api.py")
-print("═"*55 + "\n")
+print("="*70 + "\n")
